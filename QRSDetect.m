@@ -19,11 +19,11 @@ function [indices] = QRSDetect(fileName, alpha, frequency)
     % disp(['Found ECG: ', num2str(length(indices_ecg))]);
     % disp(['Found BP: ', num2str(length(indices_bp))]);
     
-    if (length(indices_ecg) >= 20 && length(indices_ecg) <= 50)
+    if (length(indices_ecg) >= 20 && length(indices_ecg) <= 60)
         mode = 'ECG';
         [indices, ~] = QRS_BP_Detect(mode, sig(1, :), alpha, frequency);
         indices = indices - delay_ecg;
-    elseif (length(indices_bp) >= 20 && length(indices_bp) <= 50)
+    elseif (length(indices_bp) >= 20 && length(indices_bp) <= 60)
         mode = 'BP'; 
         [indices, ~] = QRS_BP_Detect(mode, sig(2, :), alpha, frequency);
         indices = indices - delay_bp;

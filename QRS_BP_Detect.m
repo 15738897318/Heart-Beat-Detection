@@ -36,9 +36,10 @@ function [indices, index_delay] = QRS_BP_Detect(mode, signal, alpha, frequency)
         range_max(1, i) = max(sig_tma(i-delay : i+delay));
         range_min(1, i) = min(sig_tma(i-delay : i+delay));
         range_mean(1, i) = (range_max(1, i) + range_min(1, i)) / 2;
-        beat_extraction(1, i) = sig_tma(1, i) - range_mean(1, i);
+        beat_extraction(1, i) = (sig_tma(1, i) - range_mean(1, i));
     end
     
+    delay = delay * 2;
     max_value = 0;
     beat_extraction_2 = zeros(1, signal_length);
     for i = delay+1 : signal_length-delay
@@ -47,7 +48,7 @@ function [indices, index_delay] = QRS_BP_Detect(mode, signal, alpha, frequency)
             max_value = beat_extraction_2(1, i);
         end
     end
-    threshold = max_value * 0.2;
+    threshold = mean(beat_extraction_2);
     
     indices = [];
     max_value = -Inf;
@@ -75,7 +76,6 @@ function [indices, index_delay] = QRS_BP_Detect(mode, signal, alpha, frequency)
     RR_mean = mean(RR_differences);
     
     possible_wrong_indices = [];
-    possible_left_out_indices = [];
     for i = 1 : length(RR_differences)-1
         if (RR_differences(i) < 0.5 * RR_mean)      % too early
             if (RR_differences(i) + RR_differences(i+1) >= 0.5 * RR_mean && RR_differences(i) + RR_differences(i+1) <= 1.5 * RR_mean)
@@ -83,19 +83,10 @@ function [indices, index_delay] = QRS_BP_Detect(mode, signal, alpha, frequency)
             else
                 possible_wrong_indices = [possible_wrong_indices, indices(i)];
             end
-        elseif (RR_differences(i) > 1.5 * RR_mean)    % too late
-            num_steps = round(RR_differences(i) / RR_mean);
-            if (num_steps <= 3)
-                step = round((indices(i+1) - indices(i)) / num_steps);
-                for j = 1 : num_steps-1
-                    possible_left_out_indices = [possible_left_out_indices, indices(i) + j * step];
-                end
-            end
         end
     end
     
     indices = setdiff(indices, possible_wrong_indices);
-    indices = sort([indices, possible_left_out_indices]);
 
     %%% delay
     if (strcmp(mode, 'ECG'))
